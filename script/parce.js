@@ -4,12 +4,15 @@ const expect = require('chai').expect;
 (async () => {
 
   const readline = require('readline');
-  const fs = require('fs');
+  const fs = require('fs'),
+    request = require('request');
+  const fetch = require("node-fetch");
 
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
+  // add promise all
   const answerPromise = new Promise((resolve, reject) => {
     rl.question('Enter your username: ', (answer) => {
       resolve(answer);
@@ -32,10 +35,6 @@ const expect = require('chai').expect;
   });
   const commentsCount = await commentsCountPromice;
 
-  console.log(username);
-  console.log(photoCount);
-  console.log(commentsCount)
-
   fs.mkdir('/Users/pylypenko/src/autotests/photos', { recursive: true }, (err) => {
     if (err)
       throw err;
@@ -55,7 +54,6 @@ const expect = require('chai').expect;
 
     for (const i of arr) obj[i] = 'Value'
     
-
     await page.evaluate(() => {
       let modalWindow = document.querySelector('.RnEpo')
       if (modalWindow != null) {
@@ -68,10 +66,15 @@ const expect = require('chai').expect;
     } else {
       finished = true
     }
-    await new Promise(res => setTimeout(res, 1000))
+    await new Promise(res => setTimeout(res, 1200))
   }
-  console.log(obj)
-  await page.screenshot({ path: 'screenshots/userpage.png' });
+  let arrayLinks = Object.keys(obj);
+
+  arrayLinks.forEach(async (link, index) => {
+    const dest = fs.createWriteStream(`photos/file${index}.jpg`)
+    let response = await fetch(link)
+    await response.body.pipe(dest)
+  })
 
   // нужна проверка на закрытый профиль или фотографий 0 в открытом профиле 
 
