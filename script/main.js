@@ -3,42 +3,48 @@ const expect = require('chai').expect;
 
 (async () => {
 
-  const readline = require('readline');
-  const fs = require('fs'),
-    request = require('request');
+  // const readline = require('readline');
+  const fs = require('fs');
   const fetch = require("node-fetch");
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-  // add promise all
-  const answerPromise = new Promise((resolve, reject) => {
-    rl.question('Enter your username: ', (answer) => {
-      resolve(answer);
-    });
-  });
+  // const rl = readline.createInterface({
+  //   input: process.stdin,
+  //   output: process.stdout
+  // });
+  // //add promise all
+  // const answerPromise = new Promise((resolve, reject) => {
+  //   rl.question('Enter your username: ', (answer) => {
+  //     resolve(answer);
+  //   });
+  // });
+  // const username = await answerPromise;
+
+  // const photoCountPromise = new Promise((resolve, reject) => {
+  //   rl.question('Enter photo count: ', (answer) => {
+  //     resolve(answer);
+  //   });
+  // });
+  // const photoCount = await photoCountPromise;
+
+  // const commentsCountPromise = new Promise((resolve, reject) => {
+  //   rl.question('Enter comments count: ', (answer) => {
+  //     resolve(answer);
+  //     rl.close();
+  //   });
+  // });
+  // const commentsCount = await commentsCountPromise;
+
+  // fs.mkdir('./photos', { recursive: true }, (err) => {
+  //   if (err)
+  //     throw err;
+  // })
+
+  const {
+    createFolder,
+    answerPromise,
+  } = require('./console-modules')
+
   const username = await answerPromise;
-
-  const photoCountPromice = new Promise((resolve, reject) => {
-    rl.question('Enter photo count: ', (answer) => {
-      resolve(answer);
-    });
-  });
-  const photoCount = await photoCountPromice;
-
-  const commentsCountPromice = new Promise((resolve, reject) => {
-    rl.question('Enter comments count: ', (answer) => {
-      resolve(answer);
-      rl.close();
-    });
-  });
-  const commentsCount = await commentsCountPromice;
-
-  fs.mkdir('/Users/pylypenko/src/autotests/photos', { recursive: true }, (err) => {
-    if (err)
-      throw err;
-  })
 
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
