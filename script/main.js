@@ -41,8 +41,8 @@ const expect = require('chai').expect;
 
   const {
     createFolder,
-    answerPromise,
-  } = require('./console-modules')
+    answerPromise
+  } = require('./console-modules');
 
   const username = await answerPromise;
 
@@ -50,7 +50,7 @@ const expect = require('chai').expect;
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
   await page.goto(`https://instagram.com/${username}`);
-  // Прокинуть все в obj Object.keys(obj) > потом fetch из obj 
+  
   let obj  = {} 
   let finished = false
   let lastNodePrevStep = null
