@@ -30,7 +30,6 @@ function createPhotoCountPromise () {
     })
   })
 }
-//const photoCountPromise = createPhotoCountPromise();
 
 function createCommentsCountPromise () {
   return new Promise((resolve, reject) => {
@@ -40,7 +39,6 @@ function createCommentsCountPromise () {
     })
   })
 }
-//const commentsCountPromise = createCommentsCountPromise();
 
 module.exports = {
     createFolder,
