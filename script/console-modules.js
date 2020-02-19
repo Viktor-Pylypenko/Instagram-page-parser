@@ -19,21 +19,18 @@ function createAnswerPromise () {
   return new Promise((resolve, reject) => {
     rl.question('Enter your username: ', (answer) => {
       resolve(answer);
-      rl.close();
     })
   })
 }
-const answerPromise = createAnswerPromise();
 
 function createPhotoCountPromise () {
   return new Promise((resolve, reject) => {
     rl.question('Enter photo count: ', (answer) => {
       resolve(answer);
-      rl.close();
     })
   })
 }
-const photoCountPromise = createPhotoCountPromise();
+//const photoCountPromise = createPhotoCountPromise();
 
 function createCommentsCountPromise () {
   return new Promise((resolve, reject) => {
@@ -43,9 +40,11 @@ function createCommentsCountPromise () {
     })
   })
 }
-const commentsCountPromise = createCommentsCountPromise();
+//const commentsCountPromise = createCommentsCountPromise();
 
 module.exports = {
     createFolder,
-    answerPromise,
+    createAnswerPromise,
+    createPhotoCountPromise,
+    createCommentsCountPromise
 };

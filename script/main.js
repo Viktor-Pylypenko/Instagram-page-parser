@@ -8,10 +8,19 @@ const expect = require('chai').expect;
 
   const {
     createFolder,
-    answerPromise
+    createAnswerPromise,
+    createPhotoCountPromise,
+    createCommentsCountPromise
   } = require('./console-modules');
 
+  const answerPromise = createAnswerPromise();
   const username = await answerPromise;
+
+  const photoCountPromise = createPhotoCountPromise();
+  const photo = await photoCountPromise;
+
+  const commentsCountPromise = createCommentsCountPromise();
+  const comment = await commentsCountPromise;
 
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
