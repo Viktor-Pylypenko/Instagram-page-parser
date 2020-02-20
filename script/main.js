@@ -13,6 +13,7 @@ const expect = require('chai').expect;
     createCommentsCountPromise
   } = require('./console-modules');
 
+  createFolder();
   const answerPromise = await createAnswerPromise();
   const photoCountPromise = await createPhotoCountPromise();
   const commentsCountPromise = await createCommentsCountPromise();
