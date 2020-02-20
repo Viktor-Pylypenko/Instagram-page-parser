@@ -11,7 +11,7 @@ function createFolder () {
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
-  });
+});
 
 function createAnswerPromise () {
   return new Promise((resolve, reject) => {

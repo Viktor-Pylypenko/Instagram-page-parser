@@ -15,8 +15,19 @@ const expect = require('chai').expect;
 
   createFolder();
   const answerPromise = await createAnswerPromise();
+
+  function checkAnswer() {
+    if (!(/^[\w\d_\.]{1,20}$/g).test(answerPromise)) {
+      console.log("Your username is incorrect. Process exited")
+      process.exit();
+    } 
+  }
+  checkAnswer();
+
   const photoCountPromise = await createPhotoCountPromise();
   const commentsCountPromise = await createCommentsCountPromise();
+
+ 
 
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
