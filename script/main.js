@@ -13,19 +13,14 @@ const expect = require('chai').expect;
     createCommentsCountPromise
   } = require('./console-modules');
 
-  const answerPromise = createAnswerPromise();
-  const username = await answerPromise;
-
-  const photoCountPromise = createPhotoCountPromise();
-  const photo = await photoCountPromise;
-
-  const commentsCountPromise = createCommentsCountPromise();
-  const comment = await commentsCountPromise;
+  const answerPromise = await createAnswerPromise();
+  const photoCountPromise = await createPhotoCountPromise();
+  const commentsCountPromise = await createCommentsCountPromise();
 
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
-  await page.goto(`https://instagram.com/${username}`);
+  await page.goto(`https://instagram.com/${answerPromise}`);
   
   let obj  = {} 
   let finished = false
