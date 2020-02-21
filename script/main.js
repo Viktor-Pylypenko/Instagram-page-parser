@@ -13,21 +13,22 @@ const expect = require('chai').expect;
     createCommentsCountPromise
   } = require('./console-modules');
 
+  const {
+    checkAnswer
+  } = require('./validation')
+
+  let answerPromise;
+
   createFolder();
-  const answerPromise = await createAnswerPromise();
-
-  function checkAnswer() {
-    if (!(/^[\w\d_\.]{1,20}$/g).test(answerPromise)) {
-      console.log("Your username is incorrect. Process exited")
-      process.exit();
-    } 
+  
+  for(;;) {
+    answerPromise = await createAnswerPromise();
+    if (checkAnswer(answerPromise)) {
+      break;
+    }
   }
-  checkAnswer();
-
   const photoCountPromise = await createPhotoCountPromise();
   const commentsCountPromise = await createCommentsCountPromise();
-
- 
 
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
