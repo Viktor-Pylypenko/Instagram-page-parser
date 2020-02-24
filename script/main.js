@@ -24,6 +24,11 @@ const expect = require('chai').expect;
   for(;;) {
     answerPromise = await createAnswerPromise();
     if (checkAnswer(answerPromise)) {
+      let pageNotExist = await fetch(`https://instagram.com/${answerPromise}`);
+      if (pageNotExist.status == 404) {
+        console.log("This page doesn't exist")
+        continue
+      }
       break;
     }
   }
