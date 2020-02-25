@@ -94,7 +94,5 @@ const expect = require('chai').expect;
     await response.body.pipe(dest)
   })
 
-  // нужна проверка на закрытый профиль или фотографий 0 в открытом профиле 
-
   browser.close();
-})(); 
+})();
