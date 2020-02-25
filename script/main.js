@@ -39,6 +39,29 @@ const expect = require('chai').expect;
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
   await page.goto(`https://instagram.com/${answerPromise}`);
+
+  let emptyPageClass = await page.$('h1.uL8Hv');
+  let closedAccountClass = await page.$('h2.rkEop');
+
+  if (emptyPageClass) {
+    const isEmptyPage = async function() {
+      let emptyPageText = await page.evaluate(() => document.querySelector('h1.uL8Hv').textContent);
+      let emptyPageIncludes = emptyPageText.includes('Публикаций пока нет');
+      if (emptyPageIncludes) {
+        return console.log(emptyPageText);
+      }
+    }
+    isEmptyPage();
+  } else if (closedAccountClass) {
+    const isPrivatePage = async function() {
+      let privatePageText = await page.evaluate(() => document.querySelector('h2.rkEop').textContent);
+      let privatePageIncludes = privatePageText.includes('Это закрытый аккаунт');
+      if (privatePageIncludes) {
+        return console.log(privatePageText);
+      }
+    }
+    isPrivatePage();
+  } 
   
   let obj  = {} 
   let finished = false
