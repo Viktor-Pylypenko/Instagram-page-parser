@@ -28,41 +28,33 @@ const expect = require('chai').expect;
       if (pageNotExist.status == 404) {
         console.log("This page doesn't exist")
         continue
-      }
+      } 
       break;
     }
   }
+
   const photoCountPromise = await createPhotoCountPromise();
   const commentsCountPromise = await createCommentsCountPromise();
+
+  const isPrivate = async function () {
+    let response = await fetch(`https://instagram.com/${answerPromise}`);
+    let convertedResponse = await response.text() 
+    return convertedResponse.includes('"is_private":true')
+  }
+  if(await isPrivate()) console.log('Это закрытый аккаунт');
+  
+  const isEmpty = async function () {
+    let response = await fetch(`https://instagram.com/${answerPromise}`);
+    let convertedResponse = await response.text();
+    return convertedResponse.includes(' 0 Posts - See Instagram photos and videos')
+  }
+  if(await isEmpty()) console.log('Публикаций пока нет');
 
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
   await page.goto(`https://instagram.com/${answerPromise}`);
 
-  let emptyPageClass = await page.$('h1.uL8Hv');
-  let closedAccountClass = await page.$('h2.rkEop');
-
-  if (emptyPageClass) {
-    const isEmptyPage = async function() {
-      let emptyPageText = await page.evaluate(() => document.querySelector('h1.uL8Hv').textContent);
-      let emptyPageIncludes = emptyPageText.includes('Публикаций пока нет');
-      if (emptyPageIncludes) {
-        return console.log(emptyPageText);
-      }
-    }
-    isEmptyPage();
-  } else if (closedAccountClass) {
-    const isPrivatePage = async function() {
-      let privatePageText = await page.evaluate(() => document.querySelector('h2.rkEop').textContent);
-      let privatePageIncludes = privatePageText.includes('Это закрытый аккаунт');
-      if (privatePageIncludes) {
-        return console.log(privatePageText);
-      }
-    }
-    isPrivatePage();
-  } 
-  
   let obj  = {} 
   let finished = false
   let lastNodePrevStep = null
