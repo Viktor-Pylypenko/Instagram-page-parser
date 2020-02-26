@@ -1,5 +1,4 @@
 const puppeteer = require('puppeteer');
-const expect = require('chai').expect;
 
 (async () => {
 
@@ -14,7 +13,9 @@ const expect = require('chai').expect;
   } = require('./console-modules');
 
   const {
-    checkAnswer
+    checkAnswer,
+    isPrivate,
+    isEmpty
   } = require('./validation')
 
   let answerPromise;
@@ -33,22 +34,16 @@ const expect = require('chai').expect;
     }
   }
 
+  if (await isPrivate(answerPromise)) {
+    console.log('Это закрытый аккаунт')
+    process.exit()
+  } else if (await isEmpty(answerPromise)) {
+    console.log('Публикаций пока нет')
+    process.exit()
+  }
+
   const photoCountPromise = await createPhotoCountPromise();
   const commentsCountPromise = await createCommentsCountPromise();
-
-  const isPrivate = async function () {
-    let response = await fetch(`https://instagram.com/${answerPromise}`);
-    let convertedResponse = await response.text() 
-    return convertedResponse.includes('"is_private":true')
-  }
-  if(await isPrivate()) console.log('Это закрытый аккаунт');
-  
-  const isEmpty = async function () {
-    let response = await fetch(`https://instagram.com/${answerPromise}`);
-    let convertedResponse = await response.text();
-    return convertedResponse.includes(' 0 Posts - See Instagram photos and videos')
-  }
-  if(await isEmpty()) console.log('Публикаций пока нет');
 
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
