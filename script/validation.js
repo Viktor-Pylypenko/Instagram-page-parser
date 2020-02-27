@@ -15,7 +15,7 @@ const isPrivate = async function (answerPromise) {
 const isEmpty = async function (answerPromise) {
   let response = await fetch(`https://instagram.com/${answerPromise}`);
   let convertedResponse = await response.text();
-  return convertedResponse.includes(' 0 Posts - See Instagram photos and videos')
+  return (convertedResponse.includes(' 0 Posts - See Instagram photos and videos') || convertedResponse.includes(' 0 posts ')) 
 }
 
 module.exports = {
