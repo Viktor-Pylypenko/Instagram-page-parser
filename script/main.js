@@ -1,5 +1,4 @@
 const puppeteer = require('puppeteer');
-const expect = require('chai').expect;
 
 (async () => {
 
@@ -14,7 +13,9 @@ const expect = require('chai').expect;
   } = require('./console-modules');
 
   const {
-    checkAnswer
+    checkAnswer,
+    isPrivate,
+    isEmpty
   } = require('./validation')
 
   let answerPromise;
@@ -24,9 +25,23 @@ const expect = require('chai').expect;
   for(;;) {
     answerPromise = await createAnswerPromise();
     if (checkAnswer(answerPromise)) {
+      let pageNotExist = await fetch(`https://instagram.com/${answerPromise}`);
+      if (pageNotExist.status == 404) {
+        console.log("This page doesn't exist")
+        continue
+      } 
       break;
     }
   }
+
+  if (await isPrivate(answerPromise)) {
+    console.log('Это закрытый аккаунт')
+    process.exit()
+  } else if (await isEmpty(answerPromise)) {
+    console.log('Публикаций пока нет')
+    process.exit()
+  }
+
   const photoCountPromise = await createPhotoCountPromise();
   const commentsCountPromise = await createCommentsCountPromise();
 
@@ -34,7 +49,7 @@ const expect = require('chai').expect;
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
   await page.goto(`https://instagram.com/${answerPromise}`);
-  
+
   let obj  = {} 
   let finished = false
   let lastNodePrevStep = null
@@ -66,7 +81,5 @@ const expect = require('chai').expect;
     await response.body.pipe(dest)
   })
 
-  // нужна проверка на закрытый профиль или фотографий 0 в открытом профиле 
-
   browser.close();
-})(); 
+})();
