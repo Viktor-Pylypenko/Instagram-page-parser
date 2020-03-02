@@ -15,7 +15,7 @@ const isPrivate = async function (answerPromise) {
 const isEmpty = async function (answerPromise) {
   let response = await fetch(`https://instagram.com/${answerPromise}`);
   let convertedResponse = await response.text();
-  return convertedResponse.match(/\s0\s[Pp]osts\s/g)
+  return convertedResponse.match(/edge_owner_to_timeline_media":{"count":0/g)
 }
 
 module.exports = {
