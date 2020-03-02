@@ -19,8 +19,6 @@ const puppeteer = require('puppeteer');
   } = require('./validation')
 
   let answerPromise;
-
-  
   
   for(;;) {
     answerPromise = await createAnswerPromise();

@@ -7,7 +7,7 @@ function createFolder(answerPromise) {
       if (err)
         throw err;
     })
-    resolve(answerPromise)
+    resolve()
   })
 }
 
