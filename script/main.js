@@ -19,8 +19,6 @@ const puppeteer = require('puppeteer');
   } = require('./validation')
 
   let answerPromise;
-
-  createFolder();
   
   for(;;) {
     answerPromise = await createAnswerPromise();
@@ -42,6 +40,7 @@ const puppeteer = require('puppeteer');
     process.exit()
   }
 
+  await createFolder(answerPromise);
   const photoCountPromise = await createPhotoCountPromise();
   const commentsCountPromise = await createCommentsCountPromise();
 
@@ -76,7 +75,7 @@ const puppeteer = require('puppeteer');
   let arrayLinks = Object.keys(obj);
 
   arrayLinks.forEach(async (link, index) => {
-    const dest = fs.createWriteStream(`photos/file${index}.jpg`)
+    const dest = fs.createWriteStream(`photos/${answerPromise}/photo${index}.jpg`)
     let response = await fetch(link)
     await response.body.pipe(dest)
   })
