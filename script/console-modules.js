@@ -1,7 +1,7 @@
 const readline = require('readline');
 const fs = require('fs');
 
-function createFolder(answerPromise) { 
+async function createFolder(answerPromise) { 
     fs.mkdirSync(`./photos/${answerPromise}`, { recursive: true }, (err) => {
       if (err)
         throw err;

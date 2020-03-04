@@ -14,17 +14,19 @@ const puppeteer = require('puppeteer');
 
   const {
     checkAnswer,
+    checkPhotoCount,
     isPrivate,
     isEmpty
   } = require('./validation')
 
   let answerPromise;
-  
+
   for(;;) {
     answerPromise = await createAnswerPromise();
     if (checkAnswer(answerPromise)) {
       let pageNotExist = await fetch(`https://instagram.com/${answerPromise}`);
-      if (pageNotExist.status == 404) {
+
+      if (pageNotExist.status === 404) {
         console.log("This page doesn't exist")
         continue
       } 
@@ -41,7 +43,25 @@ const puppeteer = require('puppeteer');
   }
 
   await createFolder(answerPromise);
-  const photoCountPromise = await createPhotoCountPromise();
+
+  let photoCountPromise;
+
+  for (;;) {
+    photoCountPromise = await createPhotoCountPromise();
+    if (!checkPhotoCount(photoCountPromise)) {
+      continue
+    } else {
+      let regex = /(?<=edge_owner_to_timeline_media":\{"count":)[0-9]*/g;
+      let response = await fetch(`https://instagram.com/${answerPromise}`);
+      let convertedResponse = await response.text()
+      if (regex.test(convertedResponse) < photoCountPromise) {
+        console.log("Entered number of photos doesn't match the actual")
+        continue
+      } 
+      break
+    }
+  }
+  
   const commentsCountPromise = await createCommentsCountPromise();
 
   let browser = await puppeteer.launch({ headless: false });
@@ -64,7 +84,7 @@ const puppeteer = require('puppeteer');
         modalWindow.remove() 
       }
     })
-    let lastNodeCurrent = arr[arr.length - 1] //last node from iteration 
+    let lastNodeCurrent = arr[arr.length - 1]
     if (lastNodePrevStep != lastNodeCurrent) {
       lastNodePrevStep = lastNodeCurrent
     } else {
@@ -75,7 +95,10 @@ const puppeteer = require('puppeteer');
   let arrayLinks = Object.keys(obj);
 
   arrayLinks.forEach(async (link, index) => {
-    const dest = fs.createWriteStream(`photos/${answerPromise}/photo${index}.jpg`)
+    if (index >= photoCountPromise) {
+      return false
+    }
+    const dest = fs.createWriteStream(`photos/${answerPromise}/photo${index+1}.jpg`)
     let response = await fetch(link)
     await response.body.pipe(dest)
   })

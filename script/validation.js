@@ -7,6 +7,13 @@ function checkAnswer(answerPromise) {
   } 
   return true
 }
+function checkPhotoCount(photoCountPromise) {
+  if ((/^(?!0)\d+$/).test(photoCountPromise)) {
+    return true
+  }
+  console.log("You entered incorrect photo count")
+  return false
+}
 const isPrivate = async function (answerPromise) {
   let response = await fetch(`https://instagram.com/${answerPromise}`);
   let convertedResponse = await response.text() 
@@ -20,6 +27,7 @@ const isEmpty = async function (answerPromise) {
 
 module.exports = {
     checkAnswer,
+    checkPhotoCount,
     isPrivate,
     isEmpty
 };
