@@ -45,22 +45,24 @@ const puppeteer = require('puppeteer');
   await createFolder(answerPromise);
 
   let photoCountPromise;
-
+  let somRes = null
   for (;;) {
     photoCountPromise = await createPhotoCountPromise();
     if (!checkPhotoCount(photoCountPromise)) {
       continue
-    } else {
+    } else if(!somRes) {
       let regex = /(?<=edge_owner_to_timeline_media":\{"count":)[0-9]*/g;
       let response = await fetch(`https://instagram.com/${answerPromise}`);
       let convertedResponse = await response.text()
-      if (regex.test(convertedResponse) < photoCountPromise) {
+      somRes = convertedResponse.match(regex)[0]
+    }
+      console.log(typeof photoCountPromise)
+      if (Number(somRes) < Number(photoCountPromise)) {
         console.log("Entered number of photos doesn't match the actual")
         continue
       } 
       break
     }
-  }
   
   const commentsCountPromise = await createCommentsCountPromise();
 
