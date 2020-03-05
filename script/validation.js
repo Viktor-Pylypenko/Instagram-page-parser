@@ -7,13 +7,11 @@ function checkAnswer(answerPromise) {
     } 
     return true
 }
-
 const isPrivate = async function (answerPromise) {
   let response = await fetch(`https://instagram.com/${answerPromise}`);
   let convertedResponse = await response.text() 
   return convertedResponse.includes('"is_private":true')
 }
-
 const isEmpty = async function (answerPromise) {
   let response = await fetch(`https://instagram.com/${answerPromise}`);
   let convertedResponse = await response.text();
