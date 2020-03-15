@@ -73,7 +73,6 @@ const puppeteer = require('puppeteer');
   let obj  = {} 
   let finished = false
   let lastNodePrevStep = null
-  let visibleCountOfPhotos = 24
   while (!finished) {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
     let arr = await page.$$eval('img.FFVAD', images => images.map(img => img.src))
@@ -87,7 +86,7 @@ const puppeteer = require('puppeteer');
       }
     })
     let lastNodeCurrent = arr[arr.length - 1]
-    if (visibleCountOfPhotos > Number(photoCountAnswer)) { 
+    if (Object.keys(obj).length > Number(photoCountAnswer)) { 
       finished = true
     } else if (lastNodePrevStep != lastNodeCurrent) {
       lastNodePrevStep = lastNodeCurrent
@@ -95,18 +94,20 @@ const puppeteer = require('puppeteer');
       finished = true
     }
     await new Promise(res => setTimeout(res, 1200))
-    visibleCountOfPhotos += 12
   }
   let arrayLinks = Object.keys(obj);
+  let countForDownload = photoCountAnswer
+  if(arrayLinks.length < photoCountAnswer) {
+    countForDownload = arrayLinks.length
+    console.log(`Sorry bratik, but we can download only ${arrayLinks.length} instead of ${photoCountAnswer}`)
+  }
 
-  arrayLinks.forEach(async (link, index) => {
-    const dest = fs.createWriteStream(`photos/${usernameAnswer}/photo${index+1}.jpg`)
-    let response = await fetch(link)
-    await response.body.pipe(dest)
-    if (index >= photoCountAnswer) {
-      return false
-    }
-  })
+  for (let i = 0; i < countForDownload; i++) {
+      const link = arrayLinks[i]
+      const dest = fs.createWriteStream(`photos/${usernameAnswer}/photo${i+1}.jpg`)
+      let response = await fetch(link)
+      await response.body.pipe(dest)
 
+  }
   browser.close();
 })();
