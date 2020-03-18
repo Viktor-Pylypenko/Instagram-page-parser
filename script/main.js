@@ -63,7 +63,6 @@ const puppeteer = require('puppeteer');
   }
   
   const commentsCountAnswer = await createCommentsCountPromise();
-  console.log(commentsCountAnswer)
 
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
@@ -96,18 +95,12 @@ const puppeteer = require('puppeteer');
     await new Promise(res => setTimeout(res, 1200))
   }
   let arrayLinks = Object.keys(obj);
-  let countForDownload = photoCountAnswer
-  if(arrayLinks.length < photoCountAnswer) {
-    countForDownload = arrayLinks.length
-    console.log(`Sorry bratik, but we can download only ${arrayLinks.length} instead of ${photoCountAnswer}`)
-  }
 
-  for (let i = 0; i < countForDownload; i++) {
+  for (let i = 0; i < Number(photoCountAnswer); i++) {
       const link = arrayLinks[i]
       const dest = fs.createWriteStream(`photos/${usernameAnswer}/photo${i+1}.jpg`)
       let response = await fetch(link)
       await response.body.pipe(dest)
-
   }
   browser.close();
 })();
