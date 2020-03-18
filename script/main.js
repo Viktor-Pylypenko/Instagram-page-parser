@@ -14,17 +14,18 @@ const puppeteer = require('puppeteer');
 
   const {
     checkAnswer,
+    checkPhotoCount,
     isPrivate,
     isEmpty
   } = require('./validation')
 
-  let answerPromise;
-  
+  let usernameAnswer;
+
   for(;;) {
-    answerPromise = await createAnswerPromise();
-    if (checkAnswer(answerPromise)) {
-      let pageNotExist = await fetch(`https://instagram.com/${answerPromise}`);
-      if (pageNotExist.status == 404) {
+    usernameAnswer = await createAnswerPromise();
+    if (checkAnswer(usernameAnswer)) {
+      let pageNotExist = await fetch(`https://instagram.com/${usernameAnswer}`);
+      if (pageNotExist.status === 404) {
         console.log("This page doesn't exist")
         continue
       } 
@@ -32,22 +33,41 @@ const puppeteer = require('puppeteer');
     }
   }
 
-  if (await isPrivate(answerPromise)) {
+  if (await isPrivate(usernameAnswer)) {
     console.log('Это закрытый аккаунт')
     process.exit()
-  } else if (await isEmpty(answerPromise)) {
+  } else if (await isEmpty(usernameAnswer)) {
     console.log('Публикаций пока нет')
     process.exit()
   }
 
-  await createFolder(answerPromise);
-  const photoCountPromise = await createPhotoCountPromise();
-  const commentsCountPromise = await createCommentsCountPromise();
+  await createFolder(usernameAnswer);
+
+  let photoCountAnswer;
+  let somRes = null
+  for (;;) {
+    photoCountAnswer = await createPhotoCountPromise();
+    if (!checkPhotoCount(photoCountAnswer)) {
+      continue
+    } else if(!somRes) {
+      let regex = /(?<=edge_owner_to_timeline_media":\{"count":)[0-9]*/g;
+      let response = await fetch(`https://instagram.com/${usernameAnswer}`);
+      let convertedResponse = await response.text()
+      somRes = convertedResponse.match(regex)[0]
+    }
+    if (Number(somRes) < Number(photoCountAnswer)) {
+      console.log("Entered number of photos doesn't match the actual")
+      continue
+    } 
+    break
+  }
+  
+  const commentsCountAnswer = await createCommentsCountPromise();
 
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
-  await page.goto(`https://instagram.com/${answerPromise}`);
+  await page.goto(`https://instagram.com/${usernameAnswer}`);
 
   let obj  = {} 
   let finished = false
@@ -64,8 +84,10 @@ const puppeteer = require('puppeteer');
         modalWindow.remove() 
       }
     })
-    let lastNodeCurrent = arr[arr.length - 1] //last node from iteration 
-    if (lastNodePrevStep != lastNodeCurrent) {
+    let lastNodeCurrent = arr[arr.length - 1]
+    if (Object.keys(obj).length > Number(photoCountAnswer)) { 
+      finished = true
+    } else if (lastNodePrevStep != lastNodeCurrent) {
       lastNodePrevStep = lastNodeCurrent
     } else {
       finished = true
@@ -74,11 +96,11 @@ const puppeteer = require('puppeteer');
   }
   let arrayLinks = Object.keys(obj);
 
-  arrayLinks.forEach(async (link, index) => {
-    const dest = fs.createWriteStream(`photos/${answerPromise}/photo${index}.jpg`)
-    let response = await fetch(link)
-    await response.body.pipe(dest)
-  })
-
+  for (let i = 0; i < Number(photoCountAnswer); i++) {
+      const link = arrayLinks[i]
+      const dest = fs.createWriteStream(`photos/${usernameAnswer}/photo${i+1}.jpg`)
+      let response = await fetch(link)
+      await response.body.pipe(dest)
+  }
   browser.close();
 })();
