@@ -73,6 +73,18 @@ const puppeteer = require('puppeteer');
   let finished = false
   let lastNodePrevStep = null
   while (!finished) {
+    
+    let photoBlockArr = await page.$$('.v1Nh3')
+    for(let i = 0; i < Number(photoCountAnswer); i++) {
+      await page.waitForSelector('.v1Nh3')
+      photoBlockArr[i].click()
+      let location = await page.evaluate(() => window.location)
+      let info = await fetch(location)
+      console.log(info)
+      await page.waitForSelector('div.yiMZG > .wpO6b ')
+      await page.click('div.yiMZG > .wpO6b ')
+    }
+
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
     let arr = await page.$$eval('img.FFVAD', images => images.map(img => img.src))
 
