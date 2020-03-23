@@ -77,10 +77,11 @@ const puppeteer = require('puppeteer');
     let photoBlockArr = await page.$$('.v1Nh3')
     for(let i = 0; i < Number(photoCountAnswer); i++) {
       await page.waitForSelector('.v1Nh3')
-      photoBlockArr[i].click()
+      await photoBlockArr[i].click()
       let location = await page.evaluate(() => window.location)
-      let info = await fetch(location)
-      console.log(info)
+      let singlePhotoInfo = await fetch(location)
+      let convertedInfo = await singlePhotoInfo.textConverted()
+      console.log(convertedInfo)
       await page.waitForSelector('div.yiMZG > .wpO6b ')
       await page.click('div.yiMZG > .wpO6b ')
     }
