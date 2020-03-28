@@ -64,7 +64,7 @@ const puppeteer = require('puppeteer');
   
   const commentsCountAnswer = await createCommentsCountPromise();
 
-  let browser = await puppeteer.launch({ headless: false });
+  let browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
   await page.goto(`https://instagram.com/${usernameAnswer}`);
@@ -81,7 +81,11 @@ const puppeteer = require('puppeteer');
       let location = await page.evaluate(() => window.location)
       let singlePhotoInfo = await fetch(location)
       let convertedInfo = await singlePhotoInfo.textConverted()
-      console.log(convertedInfo)
+      let regularExpString = /"edge_media_preview_like":{"count":\d+/gm
+      let matchRegularExpString = convertedInfo.match(regularExpString)
+      let regularExpNumber = /\d+/gm
+      let likesCount = String(matchRegularExpString).match(regularExpNumber)
+      console.log("In the photo located at: " + location.href + " " + Number(likesCount) + " likes")
       await page.waitForSelector('div.yiMZG > .wpO6b ')
       await page.click('div.yiMZG > .wpO6b ')
     }
