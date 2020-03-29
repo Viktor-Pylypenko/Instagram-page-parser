@@ -64,7 +64,7 @@ const puppeteer = require('puppeteer');
   
   const commentsCountAnswer = await createCommentsCountPromise();
 
-  let browser = await puppeteer.launch({ headless: true });
+  let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
   await page.goto(`https://instagram.com/${usernameAnswer}`);
@@ -78,14 +78,17 @@ const puppeteer = require('puppeteer');
     for(let i = 0; i < Number(photoCountAnswer); i++) {
       await page.waitForSelector('.v1Nh3')
       await photoBlockArr[i].click()
-      let location = await page.evaluate(() => window.location)
+      let location = await page.evaluate(() => window.location.href)
       let singlePhotoInfo = await fetch(location)
       let convertedInfo = await singlePhotoInfo.textConverted()
-      let regularExpString = /"edge_media_preview_like":{"count":\d+/gm
-      let matchRegularExpString = convertedInfo.match(regularExpString)
+      let regularExpLike = /"edge_media_preview_like":{"count":\d+/gm
+      let regularExpComment = /"edge_media_to_parent_comment":{"count":\d+/gm
+      let matchRegularExpLike = convertedInfo.match(regularExpLike)
+      let matchRegularExpComment = convertedInfo.match(regularExpComment)
       let regularExpNumber = /\d+/gm
-      let likesCount = String(matchRegularExpString).match(regularExpNumber)
-      console.log("In the photo located at: " + location.href + " " + Number(likesCount) + " likes")
+      let likesCount = String(matchRegularExpLike).match(regularExpNumber)
+      let commentsCount = String(matchRegularExpComment).match(regularExpNumber)
+      console.log("In the photo located at: " + location + " " + Number(likesCount) + " likes and " + Number(commentsCount) + " comments")
       await page.waitForSelector('div.yiMZG > .wpO6b ')
       await page.click('div.yiMZG > .wpO6b ')
     }
