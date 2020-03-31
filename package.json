@@ -9,8 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.19.2",
     "chai": "^4.2.0",
-    "encoding": "^0.1.12",
     "node-fetch": "^2.6.0",
     "puppeteer": "^2.0.0",
     "request": "^2.88.0"

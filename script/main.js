@@ -4,6 +4,7 @@ const puppeteer = require('puppeteer');
 
   const fs = require('fs');
   const fetch = require("node-fetch");
+  const axios = require('axios');
 
   const {
     createFolder,
@@ -44,18 +45,17 @@ const puppeteer = require('puppeteer');
   await createFolder(usernameAnswer);
 
   let photoCountAnswer;
-  let somRes = null
+  let matchResponse = null
   for (;;) {
     photoCountAnswer = await createPhotoCountPromise();
     if (!checkPhotoCount(photoCountAnswer)) {
       continue
-    } else if(!somRes) {
+    } else if(!matchResponse) {
       let regex = /(?<=edge_owner_to_timeline_media":\{"count":)[0-9]*/g;
-      let response = await fetch(`https://instagram.com/${usernameAnswer}`);
-      let convertedResponse = await response.text()
-      somRes = convertedResponse.match(regex)[0]
+      let response = await axios.get(`https://instagram.com/${usernameAnswer}`)
+      matchResponse = response.data.match(regex)[0]
     }
-    if (Number(somRes) < Number(photoCountAnswer)) {
+    if (Number(matchResponse) < Number(photoCountAnswer)) {
       console.log("Entered number of photos doesn't match the actual")
       continue
     } 
@@ -79,12 +79,11 @@ const puppeteer = require('puppeteer');
       await page.waitForSelector('.v1Nh3')
       await photoBlockArr[i].click()
       let location = await page.evaluate(() => window.location.href)
-      let singlePhotoInfo = await fetch(location)
-      let convertedInfo = await singlePhotoInfo.textConverted()
+      let locationData = await axios.get(location);
       let regularExpLike = /"edge_media_preview_like":{"count":\d+/gm
       let regularExpComment = /"edge_media_to_parent_comment":{"count":\d+/gm
-      let matchRegularExpLike = convertedInfo.match(regularExpLike)
-      let matchRegularExpComment = convertedInfo.match(regularExpComment)
+      let matchRegularExpLike = locationData.data.match(regularExpLike)
+      let matchRegularExpComment = locationData.data.match(regularExpComment)
       let regularExpNumber = /\d+/gm
       let likesCount = String(matchRegularExpLike).match(regularExpNumber)
       let commentsCount = String(matchRegularExpComment).match(regularExpNumber)
