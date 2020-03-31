@@ -74,10 +74,16 @@ const puppeteer = require('puppeteer');
   let lastNodePrevStep = null
   while (!finished) {
     
-    let photoBlockArr = await page.$$('.v1Nh3')
-    for(let i = 0; i < Number(photoCountAnswer); i++) {
+    for(let j = 0; j < Number(photoCountAnswer); j++) {
+      let photoBlockArr = await page.$$('.v1Nh3')
       await page.waitForSelector('.v1Nh3')
-      await photoBlockArr[i].click()
+      await page.evaluate(() => {
+        let modalWindow = document.querySelector('.RnEpo')
+        if (modalWindow != null) {
+          modalWindow.remove() 
+        }
+      })
+      await photoBlockArr[j].click()
       let location = await page.evaluate(() => window.location.href)
       let locationData = await axios.get(location);
       let regularExpLike = /"edge_media_preview_like":{"count":\d+/gm
@@ -97,12 +103,6 @@ const puppeteer = require('puppeteer');
 
     for (const i of arr) obj[i] = 'Value'
     
-    await page.evaluate(() => {
-      let modalWindow = document.querySelector('.RnEpo')
-      if (modalWindow != null) {
-        modalWindow.remove() 
-      }
-    })
     let lastNodeCurrent = arr[arr.length - 1]
     if (Object.keys(obj).length > Number(photoCountAnswer)) { 
       finished = true
