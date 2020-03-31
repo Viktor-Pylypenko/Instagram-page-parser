@@ -117,9 +117,8 @@ const puppeteer = require('puppeteer');
 
   for (let i = 0; i < Number(photoCountAnswer); i++) {
       const link = arrayLinks[i]
-      const dest = fs.createWriteStream(`photos/${usernameAnswer}/photo${i+1}.jpg`)
       let response = await fetch(link)
-      await response.body.pipe(dest)
+      await response.body.pipe(fs.createWriteStream(`photos/${usernameAnswer}/photo${i+1}.jpg`))
   }
   browser.close();
 })();
