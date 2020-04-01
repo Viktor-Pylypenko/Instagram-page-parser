@@ -1,3 +1,5 @@
+'use strict'
+
 const puppeteer = require('puppeteer');
 
 (async () => {
@@ -5,6 +7,7 @@ const puppeteer = require('puppeteer');
   const fs = require('fs');
   const fetch = require("node-fetch");
   const axios = require('axios');
+  const path = require('path');
 
   const {
     createFolder,
@@ -69,56 +72,58 @@ const puppeteer = require('puppeteer');
   await page.setViewport({ width: 1366, height: 768 });
   await page.goto(`https://instagram.com/${usernameAnswer}`);
 
-  let obj  = {} 
-  let finished = false
-  let lastNodePrevStep = null
-  while (!finished) {
+  await page.waitForSelector('img.FFVAD')
+  await page.click('img.FFVAD')
+  
+  for(let j = 0; j < Number(photoCountAnswer); j++) {
     
-    for(let j = 0; j < Number(photoCountAnswer); j++) {
-      let photoBlockArr = await page.$$('.v1Nh3')
-      await page.waitForSelector('.v1Nh3')
-      await page.evaluate(() => {
+    let imgLink = await page.evaluate(() => document.querySelector('img.FFVAD').src)
+
+    let downloadImage = async () => {  
+      let url = imgLink
+      let dest = path.resolve(__dirname, `images/${usernameAnswer}`, `image${j+1}.jpg`)
+      const writer = fs.createWriteStream(dest)
+    
+      const response = await axios({
+        url: url,
+        method: 'GET',
+        responseType: 'stream'
+      })
+    
+      response.data.pipe(writer)
+    
+      return new Promise((resolve, reject) => {
+        writer.on('finish', resolve)
+        writer.on('error', reject)
+      })
+    }
+    downloadImage()  
+    
+    let location = await page.evaluate(() => window.location.href)
+    let locationData = await axios.get(location);
+    let regularExpLike = /"edge_media_preview_like":{"count":\d+/gm
+    let regularExpComment = /"edge_media_to_parent_comment":{"count":\d+/gm
+    let matchRegularExpLike = locationData.data.match(regularExpLike)
+    let matchRegularExpComment = locationData.data.match(regularExpComment)
+    let regularExpNumber = /\d+/gm
+    let likesCount = String(matchRegularExpLike).match(regularExpNumber)
+    let commentsCount = String(matchRegularExpComment).match(regularExpNumber)
+    console.log("In the photo located at: " + location + " " + Number(likesCount) + " likes and " + Number(commentsCount) + " comments")
+    let paginationArrow = await page.$('.coreSpriteRightPaginationArrow')
+    if (paginationArrow != null) {
+        await page.waitForSelector('.coreSpriteRightPaginationArrow')
+        await page.click('.coreSpriteRightPaginationArrow')
+        await page.evaluate(() => {
         let modalWindow = document.querySelector('.RnEpo')
         if (modalWindow != null) {
           modalWindow.remove() 
         }
       })
-      await photoBlockArr[j].click()
-      let location = await page.evaluate(() => window.location.href)
-      let locationData = await axios.get(location);
-      let regularExpLike = /"edge_media_preview_like":{"count":\d+/gm
-      let regularExpComment = /"edge_media_to_parent_comment":{"count":\d+/gm
-      let matchRegularExpLike = locationData.data.match(regularExpLike)
-      let matchRegularExpComment = locationData.data.match(regularExpComment)
-      let regularExpNumber = /\d+/gm
-      let likesCount = String(matchRegularExpLike).match(regularExpNumber)
-      let commentsCount = String(matchRegularExpComment).match(regularExpNumber)
-      console.log("In the photo located at: " + location + " " + Number(likesCount) + " likes and " + Number(commentsCount) + " comments")
-      await page.waitForSelector('div.yiMZG > .wpO6b ')
-      await page.click('div.yiMZG > .wpO6b ')
-    }
-
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-    let arr = await page.$$eval('img.FFVAD', images => images.map(img => img.src))
-
-    for (const i of arr) obj[i] = 'Value'
-    
-    let lastNodeCurrent = arr[arr.length - 1]
-    if (Object.keys(obj).length > Number(photoCountAnswer)) { 
-      finished = true
-    } else if (lastNodePrevStep != lastNodeCurrent) {
-      lastNodePrevStep = lastNodeCurrent
+      continue
     } else {
-      finished = true
+      break
     }
-    await new Promise(res => setTimeout(res, 1200))
   }
-  let arrayLinks = Object.keys(obj);
 
-  for (let i = 0; i < Number(photoCountAnswer); i++) {
-      const link = arrayLinks[i]
-      let response = await fetch(link)
-      await response.body.pipe(fs.createWriteStream(`photos/${usernameAnswer}/photo${i+1}.jpg`))
-  }
   browser.close();
 })();
