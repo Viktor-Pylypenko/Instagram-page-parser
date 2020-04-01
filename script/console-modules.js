@@ -1,12 +1,4 @@
 const readline = require('readline');
-const fs = require('fs');
-
-async function createFolder(answerPromise) { 
-    fs.mkdir(`script/images/${answerPromise}`, { recursive: true }, (err) => {
-      if (err)
-        throw err;
-    })
-}
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -39,7 +31,6 @@ function createCommentsCountPromise () {
 }
 
 module.exports = {
-    createFolder,
     createAnswerPromise,
     createPhotoCountPromise,
     createCommentsCountPromise

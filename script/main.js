@@ -4,13 +4,10 @@ const puppeteer = require('puppeteer');
 
 (async () => {
 
-  const fs = require('fs');
   const fetch = require("node-fetch");
   const axios = require('axios');
-  const path = require('path');
 
   const {
-    createFolder,
     createAnswerPromise,
     createPhotoCountPromise,
     createCommentsCountPromise
@@ -22,6 +19,11 @@ const puppeteer = require('puppeteer');
     isPrivate,
     isEmpty
   } = require('./validation')
+
+  const {
+    createFolder,
+    downloadImage
+  } = require('./download')
 
   let usernameAnswer;
 
@@ -79,25 +81,7 @@ const puppeteer = require('puppeteer');
     
     let imgLink = await page.evaluate(() => document.querySelector('img.FFVAD').src)
 
-    let downloadImage = async () => {  
-      let url = imgLink
-      let dest = path.resolve(__dirname, `images/${usernameAnswer}`, `image${j+1}.jpg`)
-      const writer = fs.createWriteStream(dest)
-    
-      const response = await axios({
-        url: url,
-        method: 'GET',
-        responseType: 'stream'
-      })
-    
-      response.data.pipe(writer)
-    
-      return new Promise((resolve, reject) => {
-        writer.on('finish', resolve)
-        writer.on('error', reject)
-      })
-    }
-    downloadImage()  
+    await downloadImage(usernameAnswer, imgLink, j)  
     
     let location = await page.evaluate(() => window.location.href)
     let locationData = await axios.get(location);
