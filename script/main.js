@@ -8,6 +8,8 @@ const puppeteer = require('puppeteer');
   const axios = require('axios');
 
   const {
+    createLoginPromise,
+    createPasswordPromise,
     createAnswerPromise,
     createPhotoCountPromise,
     createCommentsCountPromise
@@ -24,6 +26,18 @@ const puppeteer = require('puppeteer');
     createFolder,
     downloadImage
   } = require('./download')
+
+  const loginAnswer  = await createLoginPromise();
+  const passwordAnswer = await createPasswordPromise();
+
+  let browser = await puppeteer.launch({ headless: false });
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1366, height: 768 });
+  await page.goto('https://www.instagram.com/accounts/login/');
+  await page.waitForSelector('input[name="username"]');
+  await page.type('input[name="username"]', `${loginAnswer}`);
+  await page.type('input[name="password"]', `${passwordAnswer}`);
+  await page.click('button[type="submit"]');
 
   let usernameAnswer;
 
@@ -69,9 +83,6 @@ const puppeteer = require('puppeteer');
   
   const commentsCountAnswer = await createCommentsCountPromise();
 
-  let browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1366, height: 768 });
   await page.goto(`https://instagram.com/${usernameAnswer}`);
 
   await page.waitForSelector('img.FFVAD')
@@ -79,7 +90,7 @@ const puppeteer = require('puppeteer');
   
   for(let j = 0; j < Number(photoCountAnswer); j++) {
     
-    let imgLink = await page.evaluate(() => document.querySelector('img.FFVAD').src)
+    let imgLink = await page.evaluate(() => document.querySelector('img.FFVAD').currentSrc)
 
     await downloadImage(usernameAnswer, imgLink, j)  
     

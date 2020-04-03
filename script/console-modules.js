@@ -5,9 +5,25 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
+function createLoginPromise () {
+  return new Promise((resolve, reject) => {
+    rl.question('Enter your login: ', (answer) => {
+      resolve(answer);
+    })
+  })
+}
+
+function createPasswordPromise () {
+  return new Promise((resolve, reject) => {
+    rl.question('Enter your password: ', (answer) => {
+      resolve(answer);
+    })
+  })
+}
+
 function createAnswerPromise () {
   return new Promise((resolve, reject) => {
-    rl.question('Enter your username: ', (answer) => {
+    rl.question('Enter username you would like to download photos: ', (answer) => {
       resolve(answer);
     })
   })
@@ -31,6 +47,8 @@ function createCommentsCountPromise () {
 }
 
 module.exports = {
+    createLoginPromise,
+    createPasswordPromise,
     createAnswerPromise,
     createPhotoCountPromise,
     createCommentsCountPromise
