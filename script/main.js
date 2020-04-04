@@ -27,8 +27,17 @@ const puppeteer = require('puppeteer');
     downloadImage
   } = require('./download')
 
-  const loginAnswer  = await createLoginPromise();
-  const passwordAnswer = await createPasswordPromise();
+  let loginAnswer;
+  
+  for(;;) {
+    loginAnswer = await createLoginPromise()
+    if (checkAnswer(loginAnswer)) {
+      break
+    }
+    continue
+  }
+
+  let passwordAnswer = await createPasswordPromise();
 
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
@@ -38,6 +47,12 @@ const puppeteer = require('puppeteer');
   await page.type('input[name="username"]', `${loginAnswer}`);
   await page.type('input[name="password"]', `${passwordAnswer}`);
   await page.click('button[type="submit"]');
+  let incorrectDataMessage = await page.$('p#slfErrorAlert')
+  if(!incorrectDataMessage === null) {
+    console.log('Sorry, your username or password was incorrect.')
+    process.exit()
+  }
+
   let cookies = await page._client.send('Network.getAllCookies')
 
   let usernameAnswer;
