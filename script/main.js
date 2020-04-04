@@ -98,16 +98,12 @@ const puppeteer = require('puppeteer');
 
   await page.waitForSelector('img.FFVAD')
   await page.click('img.FFVAD')
-  let blockImage = await page.waitForSelector('div.kPFhm > div.KL4Bh > img.FFVAD') 
-  let imgLink = await page.evaluate(() => document.querySelector('div.kPFhm > div.KL4Bh > img.FFVAD').src)
-  
-  for(let j = 0; j < Number(photoCountAnswer); j++) {
-    
-    if (blockImage === null && imgLink === null) {
-      blockImage = await page.waitForSelector('div._23QFA > div.KL4Bh > img.FFVAD') 
-      imgLink = await page.evaluate(() => document.querySelector('div._23QFA > div.KL4Bh > img.FFVAD').src)
-    }
 
+  for(let j = 0; j < Number(photoCountAnswer); j++) {
+
+    await page.waitForSelector('div[role=dialog] img.FFVAD') 
+    let imgLink = await page.evaluate(() => document.querySelector('div[role=dialog] img.FFVAD').src)
+    
     await downloadImage(usernameAnswer, imgLink, j)  
     
     let location = await page.evaluate(() => window.location.href)
