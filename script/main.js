@@ -33,18 +33,29 @@ const puppeteer = require('puppeteer');
   let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
-  await page.goto('https://www.instagram.com/accounts/login/');
+  await page.goto('https://www.instagram.com/accounts/login/', {waitUntil : 'networkidle2' });
   await page.waitForSelector('input[name="username"]');
   await page.type('input[name="username"]', `${loginAnswer}`);
   await page.type('input[name="password"]', `${passwordAnswer}`);
   await page.click('button[type="submit"]');
+  let cookies = await page._client.send('Network.getAllCookies')
 
   let usernameAnswer;
 
   for(;;) {
     usernameAnswer = await createAnswerPromise();
     if (checkAnswer(usernameAnswer)) {
-      let pageNotExist = await fetch(`https://instagram.com/${usernameAnswer}`);
+      
+      let pageNotExist = await fetch(`https://instagram.com/${usernameAnswer}`, {
+        method: 'GET', 
+        mode: 'cors', 
+        cache: 'no-cache', 
+        credentials: 'same-origin', 
+        headers: {
+          'Content-Type': 'application/json',
+          'cookie': cookies
+        },
+      });
       if (pageNotExist.status === 404) {
         console.log("This page doesn't exist")
         continue
@@ -87,10 +98,15 @@ const puppeteer = require('puppeteer');
 
   await page.waitForSelector('img.FFVAD')
   await page.click('img.FFVAD')
+  let blockImage = await page.waitForSelector('div.kPFhm > div.KL4Bh > img.FFVAD') 
+  let imgLink = await page.evaluate(() => document.querySelector('div.kPFhm > div.KL4Bh > img.FFVAD').src)
   
   for(let j = 0; j < Number(photoCountAnswer); j++) {
     
-    let imgLink = await page.evaluate(() => document.querySelector('img.FFVAD').currentSrc)
+    if (blockImage === null && imgLink === null) {
+      blockImage = await page.waitForSelector('div._23QFA > div.KL4Bh > img.FFVAD') 
+      imgLink = await page.evaluate(() => document.querySelector('div._23QFA > div.KL4Bh > img.FFVAD').src)
+    }
 
     await downloadImage(usernameAnswer, imgLink, j)  
     
