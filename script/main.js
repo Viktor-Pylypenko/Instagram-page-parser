@@ -39,7 +39,7 @@ const puppeteer = require('puppeteer');
 
   let passwordAnswer = await createPasswordPromise();
 
-  let browser = await puppeteer.launch({ headless: false });
+  let browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
   await page.goto('https://www.instagram.com/accounts/login/', {waitUntil : 'networkidle2' });
@@ -118,17 +118,15 @@ const puppeteer = require('puppeteer');
 
     await page.waitForSelector('div[role=dialog] img.FFVAD') 
     let imgLink = await page.evaluate(() => document.querySelector('div[role=dialog] img.FFVAD').src)
+    let likesCount = await page.evaluate(() => document.querySelector('.Nm9Fw > button > span').textContent.replace(',', ''))
     
     await downloadImage(usernameAnswer, imgLink, j)  
     
     let location = await page.evaluate(() => window.location.href)
     let locationData = await axios.get(location);
-    let regularExpLike = /"edge_media_preview_like":{"count":\d+/gm
     let regularExpComment = /"edge_media_to_parent_comment":{"count":\d+/gm
-    let matchRegularExpLike = locationData.data.match(regularExpLike)
     let matchRegularExpComment = locationData.data.match(regularExpComment)
     let regularExpNumber = /\d+/gm
-    let likesCount = String(matchRegularExpLike).match(regularExpNumber)
     let commentsCount = String(matchRegularExpComment).match(regularExpNumber)
     console.log("In the photo located at: " + location + " " + Number(likesCount) + " likes and " + Number(commentsCount) + " comments")
     let paginationArrow = await page.$('.coreSpriteRightPaginationArrow')
