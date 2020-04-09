@@ -39,7 +39,7 @@ const puppeteer = require('puppeteer');
 
   let passwordAnswer = await createPasswordPromise();
 
-  let browser = await puppeteer.launch({ headless: true });
+  let browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
   await page.goto('https://www.instagram.com/accounts/login/', {waitUntil : 'networkidle2' });
@@ -118,7 +118,7 @@ const puppeteer = require('puppeteer');
 
     await page.waitForSelector('div[role=dialog] img.FFVAD') 
     let imgLink = await page.evaluate(() => document.querySelector('div[role=dialog] img.FFVAD').src)
-    let likesCount = await page.evaluate(() => document.querySelector('.Nm9Fw > button > span').textContent.replace(',', ''))
+    let likesCount = await page.evaluate(() => document.querySelector('.Nm9Fw > button > span').textContent.replace(/\s+/gm, ''))
     
     await downloadImage(usernameAnswer, imgLink, j)  
     
@@ -129,6 +129,45 @@ const puppeteer = require('puppeteer');
     let regularExpNumber = /\d+/gm
     let commentsCount = String(matchRegularExpComment).match(regularExpNumber)
     console.log("In the photo located at: " + location + " " + Number(likesCount) + " likes and " + Number(commentsCount) + " comments")
+    
+    if (Number(commentsCount) === 0) {
+      console.log("No comments yet")
+      
+    } else if (Number(commentsCountAnswer) > Number(commentsCount)) {
+      console.log("Entered number of comments doesn't match the actual. There is only " + Number(commentsCount) + ' comments.')
+      
+    } else if (Number(commentsCount) > 0 && Number(commentsCount) <= 13) {
+      let comments = await page.$$('div.C4VMK > span')
+      let n = 1
+      for(const comment of comments) {
+        let eachComment = await page.evaluate(el => el.innerText, comment)
+        console.log(`Комментарий номер ${n}: ` + eachComment)
+        n++
+        if (n > Number(commentsCountAnswer)) {
+          break
+        }
+        continue
+      }
+    } else if (Number(commentsCount) > 13) {
+      let awaitExpandButton
+      do {
+        console.log(awaitExpandButton != null)
+        awaitExpandButton = await page.waitForSelector('button.dCJp8.afkep')
+        await awaitExpandButton.click()
+      } while (awaitExpandButton) // It doesn`t work 
+
+      let comments = await page.$$('div.C4VMK > span')
+      let n = 1
+      for(const comment of comments) {
+        let eachComment = await page.evaluate(el => el.innerText, comment)
+        console.log(`Комментарий номер ${n}:` + eachComment)
+        n++
+        if (n > Number(commentsCountAnswer)) { 
+          break
+        }
+      }
+    } 
+    
     let paginationArrow = await page.$('.coreSpriteRightPaginationArrow')
     if (paginationArrow != null) {
         await page.waitForSelector('.coreSpriteRightPaginationArrow')
