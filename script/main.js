@@ -24,7 +24,8 @@ const puppeteer = require('puppeteer');
 
   const {
     createFolder,
-    downloadImage
+    downloadImage,
+    downloadComments
   } = require('./download')
 
   let loginAnswer;
@@ -39,7 +40,7 @@ const puppeteer = require('puppeteer');
 
   let passwordAnswer = await createPasswordPromise();
 
-  let browser = await puppeteer.launch({ headless: false });
+  let browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768 });
   await page.goto('https://www.instagram.com/accounts/login/', {waitUntil : 'networkidle2' });
@@ -116,6 +117,8 @@ const puppeteer = require('puppeteer');
 
   for(let j = 0; j < Number(photoCountAnswer); j++) {
 
+    let obj = new Object();
+
     await page.waitForSelector('div[role=dialog] img.FFVAD') 
     let imgLink = await page.evaluate(() => document.querySelector('div[role=dialog] img.FFVAD').src)
     let likesCount = await page.evaluate(() => document.querySelector('.Nm9Fw > button > span').textContent.replace(/\s+/gm, ''))
@@ -128,20 +131,29 @@ const puppeteer = require('puppeteer');
     let matchRegularExpComment = locationData.data.match(regularExpComment)
     let regularExpNumber = /\d+/gm
     let commentsCount = String(matchRegularExpComment).match(regularExpNumber)
-    console.log("In the photo located at: " + location + " " + Number(likesCount) + " likes and " + Number(commentsCount) + " comments")
+
+    let generalInfo = "In the photo located at: " + location + " " + Number(likesCount) + " likes and " + Number(commentsCount) + " comments"
+    
+    obj["generalIngo"] = generalInfo;
+    
+    let commentsText = null;
     
     if (Number(commentsCount) === 0) {
-      console.log("No comments yet")
+      commentsText = "No comments yet"
+      obj['info'] = commentsText
       
     } else if (Number(commentsCountAnswer) > Number(commentsCount)) {
-      console.log("Entered number of comments doesn't match the actual. There is only " + Number(commentsCount) + ' comments.')
+      commentsText = "Entered number of comments doesn't match the actual. There is only " + Number(commentsCount) + " comments."
+      obj['info'] = commentsText
       
     } else if (Number(commentsCount) > 0 && Number(commentsCount) <= 13) {
       let comments = await page.$$('div.C4VMK > span')
       let n = 1
       for(const comment of comments) {
         let eachComment = await page.evaluate(el => el.innerText, comment)
-        console.log(`Комментарий номер ${n}: ` + eachComment)
+        commentsText = `Комментарий номер ${n}: ` + eachComment
+        obj[`comment${n}`] = commentsText
+
         n++
         if (n > Number(commentsCountAnswer)) {
           break
@@ -163,13 +175,16 @@ const puppeteer = require('puppeteer');
       let n = 1
       for(const comment of comments) {
         let eachComment = await page.evaluate(el => el.innerText, comment)
-        console.log(`Комментарий номер ${n}:` + eachComment)
+        commentsText = `Комментарий номер ${n}: ` + eachComment
+        obj[`comment${n}`] = commentsText
         n++
         if (n > Number(commentsCountAnswer)) { 
           break
         }
       }
     } 
+
+    await downloadComments(usernameAnswer, obj, j)
     
     let paginationArrow = await page.$('.coreSpriteRightPaginationArrow')
     if (paginationArrow != null) {

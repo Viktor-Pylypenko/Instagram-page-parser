@@ -9,6 +9,10 @@ async function createFolder(answerPromise) {
       if (err)
         throw err;
     })
+    fs.mkdir(`script/comments/${answerPromise}`, { recursive: true }, (err) => {
+      if (err)
+        throw err;
+    })
 }
 
 let downloadImage = async (answerPromise, imgLink, j) => {  
@@ -28,9 +32,18 @@ let downloadImage = async (answerPromise, imgLink, j) => {
       writer.on('finish', resolve)
       writer.on('error', reject)
     })
-  }
+}
 
-  module.exports = {
-    createFolder,
-    downloadImage
-  };
+let downloadComments = async (answerPromise, obj, j) => {
+  fs.writeFile(`script/comments/${answerPromise}/image${j+1}.txt`, JSON.stringify(obj, undefined, '\t'), 'utf8', function (err) {
+    if (err) {
+        return console.log(err);
+    }
+  }); 
+}
+
+module.exports = {
+  createFolder,
+  downloadImage,
+  downloadComments
+};
