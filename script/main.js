@@ -151,10 +151,13 @@ const puppeteer = require('puppeteer');
     } else if (Number(commentsCount) > 13) {
       let awaitExpandButton
       do {
-        console.log(awaitExpandButton != null)
-        awaitExpandButton = await page.waitForSelector('button.dCJp8.afkep')
-        await awaitExpandButton.click()
-      } while (awaitExpandButton) // It doesn`t work 
+        try {
+          awaitExpandButton = await page.waitForSelector('button.dCJp8.afkep', { timeout: 2500 })
+          await awaitExpandButton.click()
+        } catch (e) {
+          break
+        }
+      } while (awaitExpandButton)
 
       let comments = await page.$$('div.C4VMK > span')
       let n = 1
