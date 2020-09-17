@@ -1,21 +1,29 @@
 const readline = require('readline');
-const fs = require('fs');
-
-async function createFolder(answerPromise) { 
-    fs.mkdir(`./photos/${answerPromise}`, { recursive: true }, (err) => {
-      if (err)
-        throw err;
-    })
-}
 
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
+function createLoginPromise () {
+  return new Promise((resolve, reject) => {
+    rl.question('Enter your login: ', (answer) => {
+      resolve(answer);
+    })
+  })
+}
+
+function createPasswordPromise () {
+  return new Promise((resolve, reject) => {
+    rl.question('Enter your password: ', (answer) => {
+      resolve(answer);
+    })
+  })
+}
+
 function createAnswerPromise () {
   return new Promise((resolve, reject) => {
-    rl.question('Enter your username: ', (answer) => {
+    rl.question('Enter username you would like to download photos: ', (answer) => {
       resolve(answer);
     })
   })
@@ -39,7 +47,8 @@ function createCommentsCountPromise () {
 }
 
 module.exports = {
-    createFolder,
+    createLoginPromise,
+    createPasswordPromise,
     createAnswerPromise,
     createPhotoCountPromise,
     createCommentsCountPromise

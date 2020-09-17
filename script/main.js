@@ -1,12 +1,15 @@
+'use strict'
+
 const puppeteer = require('puppeteer');
 
 (async () => {
 
-  const fs = require('fs');
   const fetch = require("node-fetch");
+  const axios = require('axios');
 
   const {
-    createFolder,
+    createLoginPromise,
+    createPasswordPromise,
     createAnswerPromise,
     createPhotoCountPromise,
     createCommentsCountPromise
@@ -19,12 +22,56 @@ const puppeteer = require('puppeteer');
     isEmpty
   } = require('./validation')
 
+  const {
+    createFolder,
+    downloadImage,
+    downloadComments
+  } = require('./download')
+
+  let loginAnswer;
+  
+  for(;;) {
+    loginAnswer = await createLoginPromise()
+    if (checkAnswer(loginAnswer)) {
+      break
+    }
+    continue
+  }
+
+  let passwordAnswer = await createPasswordPromise();
+
+  let browser = await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1366, height: 768 });
+  await page.goto('https://www.instagram.com/accounts/login/', {waitUntil : 'networkidle2' });
+  await page.waitForSelector('input[name="username"]');
+  await page.type('input[name="username"]', `${loginAnswer}`);
+  await page.type('input[name="password"]', `${passwordAnswer}`);
+  await page.click('button[type="submit"]');
+  let incorrectDataMessage = await page.$('p#slfErrorAlert')
+  if(!incorrectDataMessage === null) {
+    console.log('Sorry, your username or password was incorrect.')
+    process.exit()
+  }
+
+  let cookies = await page._client.send('Network.getAllCookies')
+
   let usernameAnswer;
 
   for(;;) {
     usernameAnswer = await createAnswerPromise();
     if (checkAnswer(usernameAnswer)) {
-      let pageNotExist = await fetch(`https://instagram.com/${usernameAnswer}`);
+      
+      let pageNotExist = await fetch(`https://instagram.com/${usernameAnswer}`, {
+        method: 'GET', 
+        mode: 'cors', 
+        cache: 'no-cache', 
+        credentials: 'same-origin', 
+        headers: {
+          'Content-Type': 'application/json',
+          'cookie': cookies
+        },
+      });
       if (pageNotExist.status === 404) {
         console.log("This page doesn't exist")
         continue
@@ -44,18 +91,17 @@ const puppeteer = require('puppeteer');
   await createFolder(usernameAnswer);
 
   let photoCountAnswer;
-  let somRes = null
+  let matchResponse = null
   for (;;) {
     photoCountAnswer = await createPhotoCountPromise();
     if (!checkPhotoCount(photoCountAnswer)) {
       continue
-    } else if(!somRes) {
+    } else if(!matchResponse) {
       let regex = /(?<=edge_owner_to_timeline_media":\{"count":)[0-9]*/g;
-      let response = await fetch(`https://instagram.com/${usernameAnswer}`);
-      let convertedResponse = await response.text()
-      somRes = convertedResponse.match(regex)[0]
+      let response = await axios.get(`https://instagram.com/${usernameAnswer}`)
+      matchResponse = response.data.match(regex)[0]
     }
-    if (Number(somRes) < Number(photoCountAnswer)) {
+    if (Number(matchResponse) < Number(photoCountAnswer)) {
       console.log("Entered number of photos doesn't match the actual")
       continue
     } 
@@ -64,43 +110,97 @@ const puppeteer = require('puppeteer');
   
   const commentsCountAnswer = await createCommentsCountPromise();
 
-  let browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1366, height: 768 });
   await page.goto(`https://instagram.com/${usernameAnswer}`);
 
-  let obj  = {} 
-  let finished = false
-  let lastNodePrevStep = null
-  while (!finished) {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-    let arr = await page.$$eval('img.FFVAD', images => images.map(img => img.src))
+  await page.waitForSelector('img.FFVAD')
+  await page.click('img.FFVAD')
 
-    for (const i of arr) obj[i] = 'Value'
+  for(let j = 0; j < Number(photoCountAnswer); j++) {
+
+    let obj = new Object();
+
+    await page.waitForSelector('div[role=dialog] img.FFVAD') 
+    let imgLink = await page.evaluate(() => document.querySelector('div[role=dialog] img.FFVAD').src)
+    let likesCount = await page.evaluate(() => document.querySelector('.Nm9Fw > button > span').textContent.replace(/\s+/gm, ''))
     
-    await page.evaluate(() => {
-      let modalWindow = document.querySelector('.RnEpo')
-      if (modalWindow != null) {
-        modalWindow.remove() 
-      }
-    })
-    let lastNodeCurrent = arr[arr.length - 1]
-    if (Object.keys(obj).length > Number(photoCountAnswer)) { 
-      finished = true
-    } else if (lastNodePrevStep != lastNodeCurrent) {
-      lastNodePrevStep = lastNodeCurrent
-    } else {
-      finished = true
-    }
-    await new Promise(res => setTimeout(res, 1200))
-  }
-  let arrayLinks = Object.keys(obj);
+    await downloadImage(usernameAnswer, imgLink, j)  
+    
+    let location = await page.evaluate(() => window.location.href)
+    let locationData = await axios.get(location);
+    let regularExpComment = /"edge_media_to_parent_comment":{"count":\d+/gm
+    let matchRegularExpComment = locationData.data.match(regularExpComment)
+    let regularExpNumber = /\d+/gm
+    let commentsCount = String(matchRegularExpComment).match(regularExpNumber)
 
-  for (let i = 0; i < Number(photoCountAnswer); i++) {
-      const link = arrayLinks[i]
-      const dest = fs.createWriteStream(`photos/${usernameAnswer}/photo${i+1}.jpg`)
-      let response = await fetch(link)
-      await response.body.pipe(dest)
+    let generalInfo = "In the photo located at: " + location + " " + Number(likesCount) + " likes and " + Number(commentsCount) + " comments"
+    
+    obj["generalIngo"] = generalInfo;
+    
+    let commentsText = null;
+    
+    if (Number(commentsCount) === 0) {
+      commentsText = "No comments yet"
+      obj['info'] = commentsText
+      
+    } else if (Number(commentsCountAnswer) > Number(commentsCount)) {
+      commentsText = "Entered number of comments doesn't match the actual. There is only " + Number(commentsCount) + " comments."
+      obj['info'] = commentsText
+      
+    } else if (Number(commentsCount) > 0 && Number(commentsCount) <= 13) {
+      let comments = await page.$$('div.C4VMK > span')
+      let n = 1
+      for(const comment of comments) {
+        let eachComment = await page.evaluate(el => el.innerText, comment)
+        commentsText = `Комментарий номер ${n}: ` + eachComment
+        obj[`comment${n}`] = commentsText
+
+        n++
+        if (n > Number(commentsCountAnswer)) {
+          break
+        }
+        continue
+      }
+    } else if (Number(commentsCount) > 13) {
+      let awaitExpandButton
+      do {
+        try {
+          awaitExpandButton = await page.waitForSelector('button.dCJp8.afkep', { timeout: 2500 })
+          await awaitExpandButton.click()
+        } catch (e) {
+          break
+        }
+      } while (awaitExpandButton)
+
+      let comments = await page.$$('div.C4VMK > span')
+      let n = 1
+      for(const comment of comments) {
+        let eachComment = await page.evaluate(el => el.innerText, comment)
+        commentsText = `Комментарий номер ${n}: ` + eachComment
+        obj[`comment${n}`] = commentsText
+        n++
+        if (n > Number(commentsCountAnswer)) { 
+          break
+        }
+      }
+    } 
+
+    await downloadComments(usernameAnswer, obj, j)
+    
+    let paginationArrow = await page.$('.coreSpriteRightPaginationArrow')
+    if (paginationArrow != null) {
+        await page.waitForSelector('.coreSpriteRightPaginationArrow')
+        await page.click('.coreSpriteRightPaginationArrow')
+        await page.evaluate(() => {
+        let modalWindow = document.querySelector('.RnEpo')
+        if (modalWindow != null) {
+          modalWindow.remove() 
+        }
+      })
+      continue
+    } else {
+      break
+    }
   }
+
   browser.close();
 })();
